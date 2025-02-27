@@ -26,7 +26,6 @@ agent = MistralAgent()
 # Get the token from the environment variables
 token = os.getenv("DISCORD_TOKEN")
 
-
 @bot.event
 async def on_ready():
     """
@@ -73,6 +72,15 @@ async def ping(ctx, *, arg=None):
         await ctx.send("Pong!")
     else:
         await ctx.send(f"Pong! Your argument was {arg}")
+
+# ask agent a command
+@bot.command(name="ask", help="Ask the agent a question.")
+async def ask(ctx, *, arg=None):
+    if arg is None:
+        await ctx.send("Please provide a question.")
+    else:
+        response = await agent.run_with_text(arg)
+        await ctx.send(response)
 
 
 # Start the bot, connecting it to the gateway
