@@ -1,14 +1,6 @@
-# Thera-VL Discord Bot
+# Discord Bot
 
-This Discord bot integrates with the Thera-VL web application to allow users to create and manage therapeutic sessions through Discord.
-
-## Features
-
-- Create and manage therapy sessions
-- Interact with AI therapists
-- Access session history
-- Receive real-time transcripts
-- Run simulated multi-agent lab meetings with LLM agents
+This Discord bot integrates with the Thera web application to allow users to create and manage lab research sessions through Discord.
 
 ## Installation
 
