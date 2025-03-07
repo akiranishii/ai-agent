@@ -1,0 +1,6 @@
+# This is a placeholder local_env.yml
+# Most environment variables are loaded from .env.local in the project root
+# You can add additional environment variables here if needed
+
+# Optional override settings
+DEBUG_MODE: false 

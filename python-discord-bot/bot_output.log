@@ -1,0 +1,74 @@
+2025-03-02 16:21:52,280 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-03-02 16:21:52,281 - discord.client - INFO - logging in using static token
+2025-03-02 16:21:53,208 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 69ae373f8f946e45a5163ace4881db8a).
+2025-03-02 16:21:55,216 - bot - INFO - Logged in as Co-Scientist#3905 (ID: 1344103520856707235)
+2025-03-02 16:21:55,216 - bot - INFO - Connected to 1 guilds
+2025-03-02 16:21:55,218 - bot - INFO - LLM Provider: openai - Available: True - Default model: gpt-4-turbo
+2025-03-02 16:21:55,218 - bot - INFO - LLM Provider: anthropic - Available: True - Default model: claude-3-sonnet-20240229
+2025-03-02 16:21:55,218 - bot - INFO - LLM Provider: mistral - Available: True - Default model: mistral-medium-latest
+2025-03-02 16:21:55,218 - bot - INFO - Starting extension loading process
+2025-03-02 16:21:55,218 - bot - INFO - Beginning extension loading sequence
+2025-03-02 16:21:55,218 - bot - INFO - Attempting to load extension: commands.session_commands
+2025-03-02 16:21:55,221 - session_commands - INFO - SessionCommands cog loaded
+2025-03-02 16:21:55,222 - bot - INFO - Successfully loaded extension: commands.session_commands
+2025-03-02 16:21:55,222 - bot - INFO - Attempting to load extension: commands.quickstart_commands
+2025-03-02 16:21:55,222 - quickstart_commands - INFO - Registered quickstart command
+2025-03-02 16:21:55,222 - quickstart_commands - INFO - All required cogs for quickstart command are loaded
+2025-03-02 16:21:55,222 - quickstart_commands - INFO - QuickstartCommands cog loaded
+2025-03-02 16:21:55,222 - bot - INFO - Successfully loaded extension: commands.quickstart_commands
+2025-03-02 16:21:55,222 - bot - INFO - Attempting to load extension: commands.help_command
+2025-03-02 16:21:55,223 - bot - INFO - Successfully loaded extension: commands.help_command
+2025-03-02 16:21:55,223 - bot - INFO - Attempting to load extension: commands.lab_commands
+2025-03-02 16:21:55,223 - lab_commands - INFO - Loading Lab Commands cog
+2025-03-02 16:21:55,223 - lab_commands - INFO - Found SessionCommands cog
+2025-03-02 16:21:55,223 - lab_commands - INFO - Dependent cogs loaded successfully
+2025-03-02 16:21:55,223 - lab_commands - INFO - Added all subcommands to lab command group
+2025-03-02 16:21:55,223 - lab_commands - INFO - LabCommands cog loaded
+2025-03-02 16:21:55,223 - bot - INFO - Successfully loaded extension: commands.lab_commands
+2025-03-02 16:21:55,223 - bot - INFO - Completed extension loading. Loaded 4 of 4 extensions
+2025-03-02 16:21:55,223 - bot - INFO - Extension loading completed successfully
+2025-03-02 16:21:55,223 - bot - INFO - Waiting for commands to be fully registered...
+2025-03-02 16:21:56,225 - bot - INFO - Starting command sync process
+2025-03-02 16:21:56,225 - bot - INFO - Syncing commands with Discord...
+2025-03-02 16:21:56,225 - bot - INFO - Found 3 commands before filtering
+2025-03-02 16:21:56,225 - bot - INFO - Found command: quickstart (type: Command)
+2025-03-02 16:21:56,225 - bot - INFO - Found command: help (type: Command)
+2025-03-02 16:21:56,225 - bot - INFO - Found command: lab (type: Group)
+2025-03-02 16:21:56,225 - bot - INFO -   Subcommand: start
+2025-03-02 16:21:56,225 - bot - INFO -   Subcommand: end
+2025-03-02 16:21:56,225 - bot - INFO -   Subcommand: list
+2025-03-02 16:21:56,225 - bot - INFO - Keeping command: quickstart
+2025-03-02 16:21:56,225 - bot - INFO - Keeping command: help
+2025-03-02 16:21:56,225 - bot - INFO - Keeping command: lab
+2025-03-02 16:21:56,225 - bot - INFO - Added command: quickstart
+2025-03-02 16:21:56,225 - bot - INFO - Added command: help
+2025-03-02 16:21:56,225 - bot - INFO - Added command: lab
+2025-03-02 16:21:56,496 - bot - INFO - Synced 3 commands globally
+2025-03-02 16:21:56,496 - bot - INFO - Final command tree: quickstart, help, lab start, lab end, lab list
+2025-03-02 16:21:56,496 - bot - INFO - Command sync completed successfully
+2025-03-02 16:21:56,496 - bot - INFO - Bot is ready
+2025-03-02 16:22:49,825 - discord.app_commands.tree - ERROR - Ignoring exception in command 'help'
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.11/site-packages/discord/app_commands/commands.py", line 857, in _do_call
+    return await self._callback(self.binding, interaction, **params)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akiranishii/Desktop/projects/thera-vl/python-discord-bot/commands/help_command.py", line 43, in help
+    await interaction.response.defer(thinking=True)
+  File "/opt/anaconda3/lib/python3.11/site-packages/discord/interactions.py", line 844, in defer
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/site-packages/discord/webhook/async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1310, in _call
+    await command._invoke_with_namespace(interaction, namespace)
+  File "/opt/anaconda3/lib/python3.11/site-packages/discord/app_commands/commands.py", line 883, in _invoke_with_namespace
+    return await self._do_call(interaction, transformed_values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/site-packages/discord/app_commands/commands.py", line 876, in _do_call
+    raise CommandInvokeError(self, e) from e
+discord.app_commands.errors.CommandInvokeError: Command 'help' raised an exception: NotFound: 404 Not Found (error code: 10062): Unknown interaction
