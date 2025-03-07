@@ -1,0 +1,136 @@
+Metadata-Version: 2.2
+Name: thera-vl-discord-bot
+Version: 0.1.0
+Summary: Discord bot for TheraLab Virtual - a multi-agent AI collaboration system
+Author-email: Your Name <your.email@example.com>
+License: MIT
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: discord.py>=2.3.0
+Requires-Dist: PyYAML>=6.0.1
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: aiohttp>=3.9.0
+Requires-Dist: openai>=1.0.0
+Requires-Dist: anthropic>=0.5.0
+Requires-Dist: mistralai>=0.0.7
+Requires-Dist: asyncio>=3.4.3
+Requires-Dist: typing-extensions>=4.7.0
+Requires-Dist: python-dateutil>=2.8.2
+Requires-Dist: psycopg2-binary>=2.9.9
+Requires-Dist: SQLAlchemy>=2.0.0
+Requires-Dist: alembic>=1.12.0
+Requires-Dist: cryptography>=41.0.0
+Requires-Dist: requests>=2.31.0
+Provides-Extra: dev
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: isort>=5.12.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+
+# Thera-VL Discord Bot
+
+This Discord bot integrates with the Thera-VL web application to allow users to create and manage therapeutic sessions through Discord.
+
+## Features
+
+- Create and manage therapy sessions
+- Interact with AI therapists
+- Access session history
+- Receive real-time transcripts
+
+## Installation
+
+1. Clone the repository
+2. Install the dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Copy the main `.env.example` to `.env.local` at the root level and fill in the required environment variables:
+
+```
+DISCORD_TOKEN=your_discord_bot_token
+APPLICATION_ID=your_discord_application_id
+API_BASE_URL=http://localhost:3000  # Or your deployed app URL
+OPENAI_API_KEY=your_openai_api_key
+```
+
+4. Alternatively, you can create a `local_env.yml` file in the `python-discord-bot` directory with the following format:
+
+```yaml
+DISCORD_TOKEN: "your_discord_bot_token"
+APPLICATION_ID: "your_discord_application_id"
+API_BASE_URL: "http://localhost:3000"
+OPENAI_API_KEY: "your_openai_api_key"
+```
+
+## Discord Bot Setup
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Go to the "Bot" tab and click "Add Bot"
+4. Under the "Privileged Gateway Intents" section, enable:
+   - Message Content Intent
+   - Server Members Intent
+5. Copy the bot token and add it to your environment variables
+6. Go to the "OAuth2" tab, then "URL Generator"
+7. Select the following scopes:
+   - bot
+   - applications.commands
+8. Select the following bot permissions:
+   - Send Messages
+   - Embed Links
+   - Attach Files
+   - Read Message History
+   - Use Slash Commands
+9. Copy the generated URL and use it to invite the bot to your server
+
+## Running the Bot
+
+```bash
+python main.py
+```
+
+## Available Commands
+
+### Session Management
+
+- `/start [title] [description] [public]` - Start a new therapy session
+  - `title` - Title of your session
+  - `description` (optional) - Brief description of what you'd like to discuss
+  - `public` (optional) - Whether the session should be public (default: false)
+  
+- `/end` - End your current active session
+
+Additional commands will be implemented in future updates.
+
+## Development
+
+The bot is structured as follows:
+
+- `main.py` - The entry point for the bot
+- `config.py` - Configuration management
+- `db_client.py` - Client for interacting with the web app's API
+- `commands/` - Command modules organized by functionality
+  - `session_commands.py` - Commands for managing sessions
+  - (Additional command modules to be added)
+
+To add new commands:
+
+1. Create a new file in the `commands` directory or add to an existing one
+2. Create a new class that inherits from `commands.Cog`
+3. Add your command methods using the `@app_commands.command()` decorator
+4. Register your command in the `INITIAL_EXTENSIONS` list in `main.py`
+
+## Troubleshooting
+
+Check the `bot.log` file for detailed error messages.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details. 
