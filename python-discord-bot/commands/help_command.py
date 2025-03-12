@@ -127,6 +127,13 @@ class HelpCommand(commands.Cog):
                 inline=False
             )
 
+            # Admin Commands - show to everyone
+            embed.add_field(
+                name="⚙️ Admin Commands",
+                value="**`/admin_sync`** - Clear and sync all slash commands\n• `global_commands` - Sync globally or just for this server (default: true)\n• `password` - Required password for authorization",
+                inline=False
+            )
+
             await interaction.followup.send(embed=embed, ephemeral=False)
         except Exception as e:
             logger.error(f"Error showing general help: {e}")
@@ -215,6 +222,17 @@ class HelpCommand(commands.Cog):
                     },
                     "example": "/lab transcript view transcript_id:12345",
                     "color": discord.Color.purple()
+                },
+                "admin_sync": {
+                    "title": "Admin Sync Command",
+                    "description": "Command to clear and re-sync all slash commands. Requires authorization.",
+                    "usage": "/admin_sync [global_commands:true] password:\"password\"",
+                    "parameters": {
+                        "global_commands": "Whether to sync commands globally across all servers (true) or just this server (false). Default is true.",
+                        "password": "Required authorization password to run this command."
+                    },
+                    "example": "/admin_sync global_commands:true password:\"admin123\"",
+                    "color": discord.Color.dark_red()
                 }
             }
 
@@ -267,6 +285,102 @@ class HelpCommand(commands.Cog):
         except Exception as e:
             logger.error(f"Error showing command help: {e}")
             # We don't need to try sending a follow-up here, as the main help method already handles errors
+
+    @app_commands.command(
+        name="admin_sync",
+        description="Admin command to clear and sync slash commands"
+    )
+    @app_commands.describe(
+        global_commands="Whether to sync commands globally (across all servers) or just this server",
+        password="Admin password to authorize the command"
+    )
+    async def admin_sync(
+        self, 
+        interaction: discord.Interaction,
+        global_commands: bool = True,
+        password: str = ""
+    ):
+        """Clear all commands and re-sync them (requires password)."""
+        # Check password instead of administrator permissions
+        if password != "admin123":
+            await interaction.response.send_message(
+                "Invalid password. This command requires authorization.",
+                ephemeral=True
+            )
+            return
+            
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        
+        try:
+            # Log the action
+            logger.info(f"User {interaction.user.name} ({interaction.user.id}) initiated command sync")
+            
+            # Extensions to reload after clearing
+            extensions = [
+                "commands.help_command",
+                "commands.lab_session_commands",
+                "commands.lab_agent_commands",
+                "commands.lab_meeting_commands",
+                "commands.lab_transcript_commands",
+                "commands.quickstart_command"
+            ]
+            
+            if global_commands:
+                # Step 1: Store all commands that will be cleared
+                logger.info("Capturing current command list before clearing...")
+                stored_commands = [cmd for cmd in self.bot.tree.get_commands()]
+                
+                # Step 2: Clear global commands
+                logger.info("Clearing global commands")
+                self.bot.tree.clear_commands(guild=None)
+                
+                # Step 3: Manually re-add all commands that were cleared
+                logger.info("Re-adding commands that were cleared...")
+                for cmd in stored_commands:
+                    self.bot.tree.add_command(cmd)
+                
+                # Step 4: Sync global commands
+                logger.info("Syncing global commands")
+                synced = await self.bot.tree.sync()
+                
+                # Report success
+                logger.info(f"Successfully synced {len(synced)} global commands")
+                await interaction.followup.send(
+                    f"✅ Cleared and re-synced {len(synced)} global commands successfully.\n"
+                    f"These changes will propagate to all servers using the bot.",
+                    ephemeral=True
+                )
+            else:
+                # Step 1: Store all commands that will be cleared
+                logger.info(f"Capturing current command list before clearing for guild {interaction.guild.id}...")
+                stored_commands = [cmd for cmd in self.bot.tree.get_commands(guild=interaction.guild)]
+                
+                # Step 2: Clear guild-specific commands
+                logger.info(f"Clearing commands for guild {interaction.guild.id}")
+                self.bot.tree.clear_commands(guild=interaction.guild)
+                
+                # Step 3: Manually re-add all commands that were cleared
+                logger.info("Re-adding commands that were cleared...")
+                for cmd in stored_commands:
+                    self.bot.tree.add_command(cmd, guild=interaction.guild)
+                
+                # Step 4: Sync guild-specific commands
+                logger.info(f"Syncing commands for guild {interaction.guild.id}")
+                synced = await self.bot.tree.sync(guild=interaction.guild)
+                
+                # Report success
+                logger.info(f"Successfully synced {len(synced)} guild commands")
+                await interaction.followup.send(
+                    f"✅ Cleared and re-synced {len(synced)} commands for this server successfully.\n"
+                    f"These changes only affect this server.",
+                    ephemeral=True
+                )
+        except Exception as e:
+            logger.error(f"Error syncing commands: {e}")
+            await interaction.followup.send(
+                f"❌ Error syncing commands: {str(e)}",
+                ephemeral=True
+            )
 
 async def setup(bot: commands.Bot):
     """Add the cog to the bot."""

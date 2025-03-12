@@ -22,6 +22,57 @@ class DatabaseClient:
         self.base_url = base_url.rstrip('/')
         logger.info(f"DatabaseClient initialized with base URL: {self.base_url}")
     
+    def _map_goal_to_description(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Map the 'goal' field to 'description' for database compatibility.
+        
+        The database schema uses 'description' but our API uses 'goal' for better UX.
+        
+        Args:
+            agent_data: Agent data that may contain 'goal' field
+            
+        Returns:
+            Modified agent data with 'description' field
+        """
+        if agent_data and 'goal' in agent_data:
+            agent_data['description'] = agent_data.pop('goal')
+        return agent_data
+    
+    def _map_description_to_goal(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Map the 'description' field to 'goal' for API compatibility.
+        
+        The database schema uses 'description' but our API uses 'goal' for better UX.
+        
+        Args:
+            agent_data: Agent data that may contain 'description' field
+            
+        Returns:
+            Modified agent data with 'goal' field
+        """
+        if agent_data and 'description' in agent_data:
+            agent_data['goal'] = agent_data.pop('description')
+        return agent_data
+    
+    def _transform_agent_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform agent response by mapping description to goal for all agents in the response.
+        
+        Args:
+            response: API response that may contain agent data
+            
+        Returns:
+            Transformed response with 'description' mapped to 'goal'
+        """
+        if not response or not response.get('isSuccess', False) or 'data' not in response:
+            return response
+            
+        # If data is a list (multiple agents)
+        if isinstance(response['data'], list):
+            response['data'] = [self._map_description_to_goal(agent) for agent in response['data']]
+        # If data is a single agent object
+        elif isinstance(response['data'], dict):
+            response['data'] = self._map_description_to_goal(response['data'])
+            
+        return response
+    
     async def health_check(self) -> Dict[str, Any]:
         """Check if the API is reachable.
         
@@ -165,7 +216,15 @@ class DatabaseClient:
         Returns:
             Session data or error information
         """
-        return await self._make_request("GET", f"/discord/sessions/active", params={"userId": user_id})
+        response = await self._make_request("GET", f"/discord/sessions/active", params={"userId": user_id})
+        logger.debug(f"Active session response: {response}")
+        
+        # Ensure we return a proper response structure even if data is null
+        if response.get("isSuccess") and response.get("data") is None:
+            logger.info(f"No active session found for user {user_id}")
+            return {"isSuccess": True, "message": "No active session found", "data": None}
+            
+        return response
     
     async def create_session(
         self, 
@@ -218,13 +277,14 @@ class DatabaseClient:
             user_id: ID of the user
             
         Returns:
-            Agents data or error information
+            Agents data or error information with 'description' mapped to 'goal'
         """
-        return await self._make_request(
+        response = await self._make_request(
             "GET", 
             f"/discord/sessions/{session_id}/agents", 
             params={"userId": user_id}
         )
+        return self._transform_agent_response(response)
     
     # Agent-related methods
     async def create_agent(
@@ -261,6 +321,8 @@ class DatabaseClient:
             "model": model
         }
         
+        # The backend API expects description instead of goal
+        # But we keep goal in our interface for better UX
         return await self._make_request("POST", "/discord/agents", data=data)
     
     # Meeting-related methods
@@ -455,6 +517,114 @@ class DatabaseClient:
         )
     
     # Additional Agent-related methods
+    async def get_agent(self, agent_id: str) -> Dict[str, Any]:
+        """Get agent by ID.
+        
+        Args:
+            agent_id: ID of the agent
+            
+        Returns:
+            Agent data or error information with 'description' mapped to 'goal'
+        """
+        response = await self._make_request("GET", f"/discord/agents/{agent_id}")
+        return self._transform_agent_response(response)
+    
+    async def get_agents_by_names(self, session_id: str, agent_names: List[str]) -> Dict[str, Any]:
+        """Get agents by their names within a session.
+        
+        Args:
+            session_id: ID of the session
+            agent_names: List of agent names to find
+            
+        Returns:
+            List of matching agents or error information with 'description' mapped to 'goal'
+        """
+        names_param = ",".join(agent_names)
+        response = await self._make_request(
+            "GET", 
+            f"/discord/sessions/{session_id}/agents", 
+            params={"names": names_param}
+        )
+        return self._transform_agent_response(response)
+    
+    async def get_agent_by_name(self, session_id: str, agent_name: str) -> Dict[str, Any]:
+        """Get an agent by name within a session.
+        
+        Args:
+            session_id: ID of the session
+            agent_name: Name of the agent to find
+            
+        Returns:
+            Agent data or error information with 'description' mapped to 'goal'
+        """
+        logger.info(f"Looking for agent '{agent_name}' in session '{session_id}'")
+        
+        # Step 1: Get the session to retrieve the user ID
+        session_result = await self.get_session(session_id=session_id)
+        if not session_result.get("isSuccess") or not session_result.get("data"):
+            logger.error(f"Failed to get session information for session ID: {session_id}")
+            return {"isSuccess": False, "message": "Failed to get session information", "data": None}
+        
+        session_data = session_result.get("data", {})
+        
+        # Check for both possible user ID field names (user_id and userId)
+        user_id = session_data.get("user_id") or session_data.get("userId")
+        
+        if not user_id:
+            # Try to find the field names in the session data for debugging
+            logger.error(f"Could not find user ID in session data. Available keys: {', '.join(session_data.keys())}")
+            return {"isSuccess": False, "message": "Invalid session data - missing user ID", "data": None}
+        
+        logger.info(f"Retrieved user_id '{user_id}' from session '{session_id}'")
+        
+        # Step 2: Try with exact name first using get_agents_by_names
+        # The API may require a user ID parameter for this call
+        names_param = agent_name
+        direct_result = await self._make_request(
+            "GET", 
+            f"/discord/sessions/{session_id}/agents", 
+            params={"names": names_param, "userId": user_id}
+        )
+        
+        direct_result = self._transform_agent_response(direct_result)
+        
+        # Check if we found a result directly
+        if direct_result.get("isSuccess", False) and direct_result.get("data") and len(direct_result["data"]) > 0:
+            agent = direct_result["data"][0]
+            logger.info(f"Found agent '{agent_name}' directly with ID: {agent.get('id')}")
+            return {"isSuccess": True, "message": "Agent found", "data": agent}
+        
+        logger.info(f"Agent '{agent_name}' not found directly, trying with session agents")
+        
+        # Step 3: If direct lookup failed, get all agents for the session
+        all_agents_result = await self.get_session_agents(session_id=session_id, user_id=user_id)
+        
+        if not all_agents_result.get("isSuccess"):
+            logger.error(f"Failed to get agents for session: {all_agents_result.get('message', 'Unknown error')}")
+            return {"isSuccess": False, "message": f"Failed to get session agents: {all_agents_result.get('message')}", "data": None}
+        
+        if all_agents_result.get("data"):
+            # Do case-insensitive comparison
+            agents = all_agents_result.get("data", [])
+            logger.info(f"Found {len(agents)} agents in session '{session_id}'")
+            
+            matching_agent = next(
+                (agent for agent in agents if agent.get("name", "").lower() == agent_name.lower()),
+                None
+            )
+            
+            if matching_agent:
+                logger.info(f"Found agent '{agent_name}' with ID: {matching_agent.get('id')}")
+                return {"isSuccess": True, "message": "Agent found", "data": matching_agent}
+            else:
+                agent_names = [agent.get("name", "") for agent in agents]
+                logger.info(f"No matching agent found. Available agents: {', '.join(agent_names)}")
+        else:
+            logger.info(f"No agents found in session '{session_id}'")
+        
+        # If we get here, agent was not found
+        return {"isSuccess": False, "message": f"Agent '{agent_name}' not found in session", "data": None}
+            
     async def update_agent(
         self,
         agent_id: str,
@@ -490,7 +660,8 @@ class DatabaseClient:
         if model:
             data["model"] = model
             
-        return await self._make_request("PUT", f"/discord/agents/{agent_id}", data)
+        response = await self._make_request("PUT", f"/discord/agents/{agent_id}", data)
+        return self._transform_agent_response(response)
     
     async def delete_agent(self, agent_id: str) -> Dict[str, Any]:
         """Delete an agent.
@@ -502,23 +673,6 @@ class DatabaseClient:
             Result of deletion operation or error information
         """
         return await self._make_request("DELETE", f"/discord/agents/{agent_id}")
-    
-    async def get_agents_by_names(self, session_id: str, agent_names: List[str]) -> Dict[str, Any]:
-        """Get agents by their names within a session.
-        
-        Args:
-            session_id: ID of the session
-            agent_names: List of agent names to find
-            
-        Returns:
-            List of matching agents or error information
-        """
-        names_param = ",".join(agent_names)
-        return await self._make_request(
-            "GET", 
-            f"/discord/sessions/{session_id}/agents", 
-            params={"names": names_param}
-        )
     
     # Transcript-related methods
     async def get_meeting_transcripts(self, meeting_id: str, limit: Optional[int] = None) -> Dict[str, Any]:
@@ -562,38 +716,6 @@ class DatabaseClient:
             data["role"] = agent_role
         
         return await self._make_request("POST", "/discord/transcripts", data=data)
-
-    async def get_agent_by_name(self, session_id: str, agent_name: str) -> Dict[str, Any]:
-        """Get an agent by name within a session.
-        
-        Args:
-            session_id: ID of the session
-            agent_name: Name of the agent to find
-            
-        Returns:
-            Agent data or error information
-        """
-        # Use the existing get_agents_by_names method with a single name
-        result = await self.get_agents_by_names(session_id, [agent_name])
-        
-        if not result.get("isSuccess", False):
-            return result
-        
-        agents = result.get("data", [])
-        
-        if not agents:
-            return {
-                "isSuccess": False,
-                "message": f"Agent with name '{agent_name}' not found in session {session_id}",
-                "data": None
-            }
-        
-        # Return the first (and hopefully only) agent with this name
-        return {
-            "isSuccess": True,
-            "message": "Agent retrieved successfully",
-            "data": agents[0]
-        }
 
 # Create a singleton instance
 db_client = DatabaseClient() 

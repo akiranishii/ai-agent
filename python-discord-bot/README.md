@@ -1,6 +1,14 @@
-# Discord Bot
+# Thera-VL Discord Bot
 
-This Discord bot integrates with the Thera web application to allow users to create and manage lab research sessions through Discord.
+This Discord bot integrates with the Thera-VL web application to allow users to create and manage virtual lab sessions through Discord.
+
+## Features
+
+- Create and manage virtual lab sessions
+- Interact with AI scientists and collaborators
+- Access session history
+- Receive real-time transcripts
+- Facilitate multi-agent scientific discussions
 
 ## Installation
 
@@ -102,9 +110,9 @@ See `README_TESTS.md` for more detailed information about tests.
 
 ### Session Management
 
-- `/start [title] [description] [public]` - Start a new therapy session
+- `/start [title] [description] [public]` - Start a new virtual lab session
   - `title` - Title of your session
-  - `description` (optional) - Brief description of what you'd like to discuss
+  - `description` (optional) - Brief description of your research topic or question
   - `public` (optional) - Whether the session should be public (default: false)
   
 - `/end` - End your current active session

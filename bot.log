@@ -1,0 +1,60 @@
+2025-03-11 20:18:39,396 - config - INFO - Loading environment variables
+2025-03-11 20:18:39,396 - config - INFO - Loading environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/.env
+2025-03-11 20:18:39,397 - config - INFO - Loading environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/local_env.yml
+2025-03-11 20:18:39,397 - config - INFO - Set log level to INFO
+2025-03-11 20:18:39,397 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-03-11 20:18:39,398 - __main__ - INFO - Starting extension loading process
+2025-03-11 20:18:39,398 - __main__ - INFO - Beginning extension loading sequence
+2025-03-11 20:18:39,398 - __main__ - INFO - Attempting to load extension: commands.lab_session_commands
+2025-03-11 20:18:39,399 - db_client - INFO - DatabaseClient initialized with base URL: http://localhost:3000/api
+2025-03-11 20:18:39,399 - commands.lab_session_commands - INFO - Created new lab command group
+2025-03-11 20:18:39,399 - commands.lab_session_commands - INFO - Registered lab session commands
+2025-03-11 20:18:39,399 - __main__ - INFO - Successfully loaded extension: commands.lab_session_commands
+2025-03-11 20:18:39,400 - __main__ - INFO - Attempting to load extension: commands.lab_agent_commands
+2025-03-11 20:18:39,400 - commands.lab_agent_commands - INFO - Using existing lab command group
+2025-03-11 20:18:39,400 - commands.lab_agent_commands - INFO - Registered lab agent commands
+2025-03-11 20:18:39,400 - __main__ - INFO - Successfully loaded extension: commands.lab_agent_commands
+2025-03-11 20:18:39,400 - __main__ - INFO - Attempting to load extension: commands.lab_meeting_commands
+2025-03-11 20:18:39,885 - httpx - INFO - HTTP Request: GET https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json "HTTP/1.1 200 OK"
+2025-03-11 20:18:40,189 - llm_client - INFO - Loaded environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/.env
+2025-03-11 20:18:40,189 - llm_client - INFO - OpenAI API Key available: True
+2025-03-11 20:18:40,189 - llm_client - INFO - Anthropic API Key available: True
+2025-03-11 20:18:40,189 - llm_client - INFO - Mistral API Key available: True
+2025-03-11 20:18:40,189 - orchestrator - INFO - Initialized AgentOrchestrator
+2025-03-11 20:18:40,189 - commands.lab_meeting_commands - INFO - Using existing lab command group
+2025-03-11 20:18:40,189 - commands.lab_meeting_commands - INFO - Registered lab meeting commands
+2025-03-11 20:18:40,189 - __main__ - INFO - Successfully loaded extension: commands.lab_meeting_commands
+2025-03-11 20:18:40,189 - __main__ - INFO - Attempting to load extension: commands.lab_transcript_commands
+2025-03-11 20:18:40,190 - commands.lab_transcript_commands - INFO - Using existing lab command group
+2025-03-11 20:18:40,190 - commands.lab_transcript_commands - INFO - Registered lab transcript commands
+2025-03-11 20:18:40,190 - __main__ - INFO - Successfully loaded extension: commands.lab_transcript_commands
+2025-03-11 20:18:40,190 - __main__ - INFO - Attempting to load extension: commands.quickstart_command
+2025-03-11 20:18:40,190 - orchestrator - INFO - Initialized AgentOrchestrator
+2025-03-11 20:18:40,190 - commands.quickstart_command - INFO - Initialized quickstart command
+2025-03-11 20:18:40,190 - __main__ - INFO - Successfully loaded extension: commands.quickstart_command
+2025-03-11 20:18:40,190 - __main__ - INFO - Attempting to load extension: commands.help_command
+2025-03-11 20:18:40,191 - commands.help_command - INFO - Initialized help command
+2025-03-11 20:18:40,191 - __main__ - INFO - Successfully loaded extension: commands.help_command
+2025-03-11 20:18:40,191 - __main__ - INFO - Completed extension loading. Loaded 6 of 6 extensions
+2025-03-11 20:18:40,191 - __main__ - INFO - Extension loading completed successfully
+2025-03-11 20:18:40,191 - __main__ - INFO - Waiting for commands to be fully registered...
+2025-03-11 20:18:41,192 - __main__ - INFO - Starting command sync process
+2025-03-11 20:18:41,193 - __main__ - INFO - Starting bot...
+2025-03-11 20:18:41,193 - discord.client - INFO - logging in using static token
+2025-03-11 20:18:42,037 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: c44f44856321ab6e4be25007029ea55e).
+2025-03-11 20:18:44,059 - __main__ - INFO - Co-Scientist is connected to Discord!
+2025-03-11 20:18:44,060 - __main__ - INFO - Bot ID: 1344103520856707235
+2025-03-11 20:18:44,060 - __main__ - INFO - Connected to 1 guilds
+2025-03-11 20:18:44,060 - llm_client - INFO - Loaded environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/.env
+2025-03-11 20:18:44,060 - llm_client - INFO - OpenAI API Key available: True
+2025-03-11 20:18:44,060 - llm_client - INFO - Anthropic API Key available: True
+2025-03-11 20:18:44,060 - llm_client - INFO - Mistral API Key available: True
+2025-03-11 20:18:44,060 - __main__ - INFO - Available LLM providers: openai, anthropic, mistral
+2025-03-11 20:18:44,060 - __main__ - INFO - Default models per provider:
+2025-03-11 20:18:44,060 - __main__ - INFO -   - LLMProvider.OPENAI: openai/gpt-4o
+2025-03-11 20:18:44,060 - __main__ - INFO -   - LLMProvider.ANTHROPIC: anthropic/claude-3-opus-20240229
+2025-03-11 20:18:44,060 - __main__ - INFO -   - LLMProvider.MISTRAL: mistral/mistral-small-latest
+2025-03-11 20:18:44,061 - __main__ - INFO - No guild ID specified. Commands will be registered globally.
+2025-03-11 20:18:44,061 - __main__ - INFO - Syncing commands with Discord...
+2025-03-11 20:18:44,438 - __main__ - INFO - Slash commands synced globally
+2025-03-11 20:18:44,439 - __main__ - INFO - Bot is ready!

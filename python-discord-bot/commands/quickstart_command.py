@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import logging
 from typing import Optional
+import asyncio
 
 from db_client import db_client
 from models import ModelConfig
@@ -17,6 +18,7 @@ class QuickstartCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.orchestrator = AgentOrchestrator(llm_client)
+        self.conversation_tasks = {}  # Dictionary to track conversation tasks
         logger.info("Initialized quickstart command")
 
     @app_commands.command(
@@ -28,7 +30,9 @@ class QuickstartCommand(commands.Cog):
         agent_count="Number of Scientist agents to create (default: 3)",
         include_critic="Whether to include a Critic agent (default: true)",
         public="Whether the session should be publicly viewable (default: false)",
-        live_mode="Show agent responses in real-time (default: true)"
+        live_mode="Show agent responses in real-time (default: true)",
+        rounds="Number of conversation rounds (default: 3)",
+        speakers_per_round="Number of agent speakers selected per round (default: all agents excluding PI)"
     )
     async def quickstart(
         self,
@@ -37,7 +41,9 @@ class QuickstartCommand(commands.Cog):
         agent_count: Optional[int] = 3,
         include_critic: Optional[bool] = True,
         public: Optional[bool] = False,
-        live_mode: Optional[bool] = True
+        live_mode: Optional[bool] = True,
+        rounds: Optional[int] = 3,
+        speakers_per_round: Optional[int] = None
     ):
         """Quickly create a lab session with agents and start a meeting."""
         # IMMEDIATELY acknowledge the interaction to prevent timeout
@@ -92,6 +98,12 @@ class QuickstartCommand(commands.Cog):
             session_data = session_result.get("data", {})
             session_id = session_data.get("id")
             
+            # Send initial progress message
+            progress_message = await interaction.followup.send(
+                "Creating your research team for brainstorming session...",
+                ephemeral=True
+            )
+            
             # Create Principal Investigator
             # Generate variables for the PI based on the topic
             pi_variables = await llm_client.generate_agent_variables(
@@ -99,51 +111,124 @@ class QuickstartCommand(commands.Cog):
                 agent_type="principal_investigator"
             )
             
+            # Store PI details for reference in scientist generation
+            pi_name = ModelConfig.PRINCIPAL_INVESTIGATOR_ROLE
+            pi_expertise = pi_variables.get("expertise", "")
+            pi_goal = pi_variables.get("goal", "")
+            
+            # Update progress with PI info
+            await progress_message.edit(content=(
+                "Creating your research team for brainstorming session...\n\n"
+                f"🔬 **{pi_name}**\n"
+                f"• Expertise: {pi_expertise}\n"
+                f"• Goal: {pi_goal}"
+            ))
+            
             await db_client.create_agent(
                 session_id=session_id,
                 user_id=user_id,
-                name=ModelConfig.PRINCIPAL_INVESTIGATOR_ROLE,
+                name=pi_name,
                 role="Lead",
-                goal=pi_variables.get("goal"),
-                expertise=pi_variables.get("expertise"),
+                goal=pi_goal,
+                expertise=pi_expertise,
                 model="openai"
             )
             
-            # Create Scientists with varied expertise
-            expertise_areas = [
-                "Theoretical Analysis",
-                "Experimental Design",
-                "Data Analysis",
-                "Implementation Strategy",
-                "Risk Assessment",
-                "Innovation Research"
-            ]
+            # Keep track of all created agents for diversity
+            created_agents_info = [{
+                "name": pi_name,
+                "role": "Lead",
+                "expertise": pi_expertise,
+                "goal": pi_goal
+            }]
             
             for i in range(agent_count):
-                # Generate variables for each scientist based on the topic
+                # Create diversity context with information about existing team
+                diversity_context = [
+                    "Create a scientist with expertise COMPLETELY DIFFERENT from previously generated team members.",
+                    f"This is scientist #{i+1} of {agent_count}."
+                ]
+                
+                # Include details of existing team for better complementary expertise
+                if created_agents_info:
+                    previous_agents_text = "\n\nCurrent research team:\n"
+                    for j, agent_info in enumerate(created_agents_info):
+                        previous_agents_text += f"{j+1}. {agent_info['name']} ({agent_info['role']}) - Expertise: {agent_info['expertise']}"
+                        if agent_info.get('goal'):
+                            previous_agents_text += f", Goal: {agent_info['goal']}"
+                        previous_agents_text += "\n"
+                    
+                    diversity_context.append(f"Current team composition: {previous_agents_text}")
+                    diversity_context.append("Your role must be complementary to the existing team and fill a knowledge gap.")
+                
+                # Add position-specific guidance for more diversity
+                if i == 0:
+                    diversity_context.append("Create a scientist from a PHYSICAL SCIENCES domain (physics, chemistry, materials science, etc.) rather than biology or computer science.")
+                elif i == 1:
+                    diversity_context.append("Create a scientist from an APPLIED SCIENCE field (engineering, robotics, energy systems, etc.) rather than theoretical domains.")
+                else:
+                    diversity_context.append("Create a scientist from a completely different discipline like geology, astronomy, mathematics, or social sciences that can bring a unique perspective.")
+                
+                # Generate variables with the diversity context
                 scientist_variables = await llm_client.generate_agent_variables(
                     topic=topic,
-                    agent_type="scientist"
+                    agent_type="scientist",
+                    additional_context="\n".join(diversity_context)
                 )
+                
+                # Get the agent details
+                agent_name = scientist_variables.get("agent_name", f"Scientist {i+1}")
+                agent_expertise = scientist_variables.get("expertise", "")
+                agent_goal = scientist_variables.get("goal", "")
+                
+                # Track this agent's details for future diversity
+                created_agents_info.append({
+                    "name": agent_name,
+                    "role": ModelConfig.SCIENTIST_ROLE,
+                    "expertise": agent_expertise,
+                    "goal": agent_goal
+                })
+                
+                # Update progress with this scientist's info
+                current_content = progress_message.content
+                await progress_message.edit(content=(
+                    current_content + "\n\n"
+                    f"🔬 **{agent_name}**\n"
+                    f"• Expertise: {agent_expertise}\n"
+                    f"• Goal: {agent_goal}"
+                ))
                 
                 await db_client.create_agent(
                     session_id=session_id,
                     user_id=user_id,
-                    name=scientist_variables.get("agent_name", f"Scientist {i+1}"),
+                    name=agent_name,
                     role=ModelConfig.SCIENTIST_ROLE,
-                    expertise=scientist_variables.get("expertise"),
-                    goal=scientist_variables.get("goal"),
+                    expertise=agent_expertise,
+                    goal=agent_goal,
                     model="openai"
                 )
             
             # Create Critic if requested
             if include_critic:
+                critic_expertise = "Critical analysis of scientific research, identification of methodological flaws, and evaluation of research validity"
+                critic_goal = "Ensure scientific rigor and identify potential weaknesses in proposed research approaches"
+                
+                # Update progress with critic info
+                current_content = progress_message.content
+                await progress_message.edit(content=(
+                    current_content + "\n\n"
+                    f"🔬 **Critic**\n"
+                    f"• Expertise: {critic_expertise}\n"
+                    f"• Goal: {critic_goal}"
+                ))
+                
                 await db_client.create_agent(
                     session_id=session_id,
                     user_id=user_id,
                     name="Critic",
                     role=ModelConfig.CRITIC_ROLE,
-                    goal="Challenge assumptions and identify potential issues",
+                    expertise=critic_expertise,
+                    goal=critic_goal,
                     model="openai"
                 )
             
@@ -186,20 +271,35 @@ class QuickstartCommand(commands.Cog):
                 session_id=session_id,
                 agents=agents,
                 agenda=topic,
-                round_count=3
+                round_count=rounds
             )
             
-            # Start the conversation asynchronously
-            await self.orchestrator.start_conversation(
-                meeting_id=meeting_id,
-                interaction=interaction,
-                live_mode=live_mode
+            # Start the conversation in a background task
+            task = asyncio.create_task(
+                self.orchestrator.start_conversation(
+                    meeting_id=meeting_id,
+                    interaction=interaction,
+                    live_mode=live_mode,
+                    conversation_length=speakers_per_round
+                )
             )
+            
+            # Store the task with the meeting ID as the key
+            self.conversation_tasks[meeting_id] = task
+            
+            # Add a done callback to clean up the task when it completes
+            task.add_done_callback(lambda t, mid=meeting_id: self._cleanup_conversation_task(mid, t))
             
             # Calculate the total number of agents
             agent_total = agent_count + 1  # Scientists + Principal Investigator
             if include_critic:
                 agent_total += 1  # Add Critic if included
+            
+            # Update progress message one last time to indicate completion
+            await progress_message.edit(content=(
+                progress_message.content + "\n\n"
+                "✅ All agents have been created. Starting the brainstorming session now..."
+            ))
                 
             # Create response embed
             embed = discord.Embed(
@@ -225,7 +325,7 @@ class QuickstartCommand(commands.Cog):
                 name="Meeting",
                 value=(
                     f"**ID**: {meeting_id}\n"
-                    f"**Rounds**: 3\n"
+                    f"**Rounds**: {rounds}\n"
                     f"**Status**: In Progress\n"
                     f"**Live Mode**: {'On' if live_mode else 'Off'}"
                 ),
@@ -249,6 +349,20 @@ class QuickstartCommand(commands.Cog):
                 "An error occurred while setting up your session. Please try again later.",
                 ephemeral=True
             )
+
+    async def _cleanup_conversation_task(self, meeting_id, task):
+        """Callback method to clean up conversation tasks."""
+        try:
+            # Remove the task from the conversation_tasks dictionary
+            self.conversation_tasks.pop(meeting_id, None)
+            
+            # Check if the task completed successfully
+            if task.exception():
+                logger.error(f"Conversation task for meeting {meeting_id} failed with exception: {task.exception()}")
+            else:
+                logger.info(f"Conversation task for meeting {meeting_id} completed successfully")
+        except Exception as e:
+            logger.error(f"Error cleaning up conversation task for meeting {meeting_id}: {e}")
 
 async def setup(bot: commands.Bot):
     """Add the cog to the bot."""

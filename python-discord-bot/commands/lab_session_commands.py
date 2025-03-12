@@ -262,10 +262,18 @@ class LabSessionCommands(commands.Cog):
                 )
                 return
             
+            # Filter sessions based on include_closed parameter
+            if not include_closed:
+                # Only include active and recently closed sessions
+                sessions = [s for s in sessions if s.get("status") == "active" or s.get("status") == "ended"]
+            
+            # Apply limit
+            sessions = sessions[:limit]
+            
             # Create response embed
             embed = discord.Embed(
                 title="Your Lab Sessions",
-                description="Here are your lab sessions:",
+                description=f"Showing up to {limit} sessions" + (" (including closed)" if include_closed else ""),
                 color=discord.Color.blue()
             )
             
@@ -283,22 +291,31 @@ class LabSessionCommands(commands.Cog):
                     inline=False
                 )
             
-            # Add recent sessions
-            recent_sessions = [s for s in sessions if s.get("status") != "active"][:5]  # Show last 5 sessions
-            if recent_sessions:
-                recent_list = []
-                for session in recent_sessions:
-                    recent_list.append(
-                        f"**{session.get('title')}**\n"
-                        f"ID: {session.get('id')}\n"
-                        f"Status: {session.get('status', 'Unknown').title()}\n"
-                        f"Privacy: {'Public' if session.get('is_public') else 'Private'}"
+            # Add other sessions
+            other_sessions = [s for s in sessions if s.get("status") != "active"]
+            if other_sessions:
+                # Split sessions into chunks to avoid Discord's 1024 character limit per field
+                MAX_SESSIONS_PER_FIELD = 3  # Adjust this based on your average session description length
+                session_chunks = [other_sessions[i:i + MAX_SESSIONS_PER_FIELD] 
+                                 for i in range(0, len(other_sessions), MAX_SESSIONS_PER_FIELD)]
+                
+                for i, chunk in enumerate(session_chunks):
+                    other_list = []
+                    for session in chunk:
+                        status_emoji = "🔴" if session.get("status") == "ended" else "⚪"
+                        other_list.append(
+                            f"{status_emoji} **{session.get('title')}**\n"
+                            f"ID: {session.get('id')}\n"
+                            f"Status: {session.get('status', 'Unknown').title()}\n"
+                            f"Privacy: {'Public' if session.get('is_public') else 'Private'}"
+                        )
+                    
+                    field_name = "Your Other Sessions" if i == 0 else f"Your Other Sessions (continued {i+1})"
+                    embed.add_field(
+                        name=field_name,
+                        value="\n\n".join(other_list),
+                        inline=False
                     )
-                embed.add_field(
-                    name="Recent Sessions",
-                    value="\n\n".join(recent_list) if recent_list else "No recent sessions",
-                    inline=False
-                )
             
             await interaction.followup.send(
                 embed=embed,
@@ -340,18 +357,23 @@ class LabSessionCommands(commands.Cog):
         
         try:
             # Check if user has an active session
-            active_session = await db_client.get_active_session(user_id=user_id)
-            if active_session.get("isSuccess") and active_session.get("data"):
+            active_session_result = await db_client.get_active_session(user_id=user_id)
+            logger.info(f"Active session check result: {active_session_result}")
+            
+            if active_session_result.get("isSuccess") and active_session_result.get("data"):
                 # End the current session
                 await db_client.end_session(
-                    session_id=active_session["data"]["id"]
+                    session_id=active_session_result["data"]["id"]
                 )
                 logger.info(f"Ended previous active session for user {user_id}")
+            else:
+                logger.info(f"No active session to end for user {user_id}")
             
             # Get the session to reopen
             session_result = await db_client.get_session(session_id=session_id)
             
             if not session_result.get("isSuccess") or not session_result.get("data"):
+                logger.error(f"Session not found: {session_id}")
                 await interaction.followup.send(
                     "Session not found. Please check the session ID and try again.",
                     ephemeral=True
@@ -360,16 +382,22 @@ class LabSessionCommands(commands.Cog):
             
             session_data = session_result.get("data", {})
             
+            # Extract user ID from session data, handling both snake_case and camelCase
+            session_user_id = session_data.get("user_id") or session_data.get("userId")
+            
             # Verify ownership
-            if session_data.get("user_id") != user_id:
+            if session_user_id != user_id:
+                logger.warning(f"User {user_id} attempted to reopen session {session_id} owned by {session_user_id}")
                 await interaction.followup.send(
                     "You can only reopen your own sessions.",
                     ephemeral=True
                 )
                 return
             
-            # Verify session is ended
-            if session_data.get("status") == "active":
+            # Check if session is already active
+            session_status = session_data.get("status")
+            if session_status == "active":
+                logger.info(f"Session {session_id} is already active")
                 await interaction.followup.send(
                     "This session is already active.",
                     ephemeral=True
@@ -377,9 +405,11 @@ class LabSessionCommands(commands.Cog):
                 return
             
             # Reopen the session
+            logger.info(f"Reopening session {session_id}")
             reopen_result = await db_client.reopen_session(session_id=session_id)
             
             if not reopen_result.get("isSuccess"):
+                logger.error(f"Failed to reopen session: {reopen_result}")
                 await interaction.followup.send(
                     f"Failed to reopen session: {reopen_result.get('message', 'Unknown error')}",
                     ephemeral=True
@@ -387,6 +417,7 @@ class LabSessionCommands(commands.Cog):
                 return
             
             reopened_data = reopen_result.get("data", {})
+            logger.info(f"Successfully reopened session {session_id}")
             
             # Create response embed
             embed = discord.Embed(
@@ -401,7 +432,7 @@ class LabSessionCommands(commands.Cog):
             )
             embed.add_field(
                 name="Privacy",
-                value="Public" if session_data.get("is_public") else "Private",
+                value="Public" if session_data.get("is_public") or session_data.get("isPublic") else "Private",
                 inline=True
             )
             embed.add_field(
@@ -609,20 +640,28 @@ class LabSessionCommands(commands.Cog):
             # Add other sessions
             other_sessions = [s for s in sessions if s.get("status") != "active"]
             if other_sessions:
-                other_list = []
-                for session in other_sessions:
-                    status_emoji = "🔴" if session.get("status") == "ended" else "⚪"
-                    other_list.append(
-                        f"{status_emoji} **{session.get('title')}**\n"
-                        f"ID: {session.get('id')}\n"
-                        f"Status: {session.get('status', 'Unknown').title()}\n"
-                        f"Privacy: {'Public' if session.get('is_public') else 'Private'}"
+                # Split sessions into chunks to avoid Discord's 1024 character limit per field
+                MAX_SESSIONS_PER_FIELD = 3  # Adjust this based on your average session description length
+                session_chunks = [other_sessions[i:i + MAX_SESSIONS_PER_FIELD] 
+                                 for i in range(0, len(other_sessions), MAX_SESSIONS_PER_FIELD)]
+                
+                for i, chunk in enumerate(session_chunks):
+                    other_list = []
+                    for session in chunk:
+                        status_emoji = "🔴" if session.get("status") == "ended" else "⚪"
+                        other_list.append(
+                            f"{status_emoji} **{session.get('title')}**\n"
+                            f"ID: {session.get('id')}\n"
+                            f"Status: {session.get('status', 'Unknown').title()}\n"
+                            f"Privacy: {'Public' if session.get('is_public') else 'Private'}"
+                        )
+                    
+                    field_name = "Your Other Sessions" if i == 0 else f"Your Other Sessions (continued {i+1})"
+                    embed.add_field(
+                        name=field_name,
+                        value="\n\n".join(other_list),
+                        inline=False
                     )
-                embed.add_field(
-                    name="Other Sessions",
-                    value="\n\n".join(other_list) if other_list else "No other sessions",
-                    inline=False
-                )
             
             await interaction.followup.send(
                 embed=embed,
@@ -639,27 +678,43 @@ class LabSessionCommands(commands.Cog):
             except Exception as follow_up_error:
                 logger.error(f"Failed to send error message: {follow_up_error}")
         
-    async def reopen_session_callback(self, interaction: discord.Interaction, session_id: str):
+    async def reopen_session_callback(
+        self,
+        interaction: discord.Interaction,
+        session_id: str,
+        confirm: Optional[bool] = False
+    ):
         """Callback for the reopen_session command."""
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        
+        if not confirm:
+            await interaction.followup.send(
+                "Please confirm that you want to reopen this session by using `confirm:true`",
+                ephemeral=True
+            )
+            return
+        
+        user_id = str(interaction.user.id)
+        
         try:
-            # Immediately acknowledge the interaction to prevent timeout
-            await interaction.response.defer(ephemeral=True)
-            
-            user_id = str(interaction.user.id)
-            
             # Check if user has an active session
-            active_session = await db_client.get_active_session(user_id=user_id)
-            if active_session.get("isSuccess") and active_session.get("data"):
+            active_session_result = await db_client.get_active_session(user_id=user_id)
+            logger.info(f"Active session check result: {active_session_result}")
+            
+            if active_session_result.get("isSuccess") and active_session_result.get("data"):
                 # End the current session
                 await db_client.end_session(
-                    session_id=active_session["data"]["id"]
+                    session_id=active_session_result["data"]["id"]
                 )
                 logger.info(f"Ended previous active session for user {user_id}")
+            else:
+                logger.info(f"No active session to end for user {user_id}")
             
             # Get the session to reopen
             session_result = await db_client.get_session(session_id=session_id)
             
             if not session_result.get("isSuccess") or not session_result.get("data"):
+                logger.error(f"Session not found: {session_id}")
                 await interaction.followup.send(
                     "Session not found. Please check the session ID and try again.",
                     ephemeral=True
@@ -668,16 +723,22 @@ class LabSessionCommands(commands.Cog):
             
             session_data = session_result.get("data", {})
             
+            # Extract user ID from session data, handling both snake_case and camelCase
+            session_user_id = session_data.get("user_id") or session_data.get("userId")
+            
             # Verify ownership
-            if session_data.get("user_id") != user_id:
+            if session_user_id != user_id:
+                logger.warning(f"User {user_id} attempted to reopen session {session_id} owned by {session_user_id}")
                 await interaction.followup.send(
                     "You can only reopen your own sessions.",
                     ephemeral=True
                 )
                 return
             
-            # Verify session is ended
-            if session_data.get("status") == "active":
+            # Check if session is already active
+            session_status = session_data.get("status")
+            if session_status == "active":
+                logger.info(f"Session {session_id} is already active")
                 await interaction.followup.send(
                     "This session is already active.",
                     ephemeral=True
@@ -685,9 +746,11 @@ class LabSessionCommands(commands.Cog):
                 return
             
             # Reopen the session
+            logger.info(f"Reopening session {session_id}")
             reopen_result = await db_client.reopen_session(session_id=session_id)
             
             if not reopen_result.get("isSuccess"):
+                logger.error(f"Failed to reopen session: {reopen_result}")
                 await interaction.followup.send(
                     f"Failed to reopen session: {reopen_result.get('message', 'Unknown error')}",
                     ephemeral=True
@@ -695,6 +758,7 @@ class LabSessionCommands(commands.Cog):
                 return
             
             reopened_data = reopen_result.get("data", {})
+            logger.info(f"Successfully reopened session {session_id}")
             
             # Create response embed
             embed = discord.Embed(
@@ -709,7 +773,7 @@ class LabSessionCommands(commands.Cog):
             )
             embed.add_field(
                 name="Privacy",
-                value="Public" if session_data.get("is_public") else "Private",
+                value="Public" if session_data.get("is_public") or session_data.get("isPublic") else "Private",
                 inline=True
             )
             embed.add_field(
@@ -722,6 +786,7 @@ class LabSessionCommands(commands.Cog):
                 embed=embed,
                 ephemeral=True
             )
+            
         except Exception as e:
             logger.error(f"Error reopening session: {str(e)}", exc_info=True)
             try:

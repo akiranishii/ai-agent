@@ -158,13 +158,25 @@ class LabTranscriptCommands(commands.Cog):
                     f"**Agenda**: {meeting.get('agenda')}\n"
                     f"**Rounds**: {meeting.get('round_count')}\n"
                     f"**Status**: {'Completed' if meeting.get('is_completed') else 'In Progress'}\n"
-                    f"**Created**: <t:{int(datetime.fromisoformat(meeting.get('created_at')).timestamp())}:R>\n"
+                    f"{self._format_created_time(meeting.get('created_at'))}\n"
                     f"Use `/lab transcript view meeting_id:{meeting.get('id')}` to view transcript"
                 ),
                 inline=False
             )
         
         await interaction.followup.send(embed=embed, ephemeral=True)
+
+    def _format_created_time(self, created_at):
+        """Safely format a created_at timestamp for display."""
+        try:
+            if created_at and isinstance(created_at, str):
+                timestamp = int(datetime.fromisoformat(created_at).timestamp())
+                return f"**Created**: <t:{timestamp}:R>"
+            else:
+                return "**Created**: Unknown"
+        except Exception as e:
+            logger.warning(f"Error formatting timestamp: {e}")
+            return "**Created**: Unknown"
 
     async def view_transcript(self, interaction: discord.Interaction, meeting_id: str, round_number: Optional[int] = None,
                           agent_name: Optional[str] = None, format: Optional[str] = "embed"):
@@ -250,13 +262,15 @@ class LabTranscriptCommands(commands.Cog):
                     color=discord.Color.blue()
                 )
                 
+                # Basic meeting info
                 embed.add_field(
-                    name="Meeting Details",
+                    name="Meeting Information",
                     value=(
-                        f"**ID**: {meeting_id}\n"
+                        f"**Agenda**: {meeting.get('agenda')}\n"
+                        f"**Rounds**: {meeting.get('round_count')}\n"
                         f"**Parallel Run**: {meeting.get('parallel_index', 0) + 1}\n"
                         f"**Status**: {'Completed' if meeting.get('is_completed') else 'In Progress'}\n"
-                        f"**Created**: <t:{int(datetime.fromisoformat(meeting.get('created_at')).timestamp())}:R>"
+                        f"{self._format_created_time(meeting.get('created_at'))}"
                     ),
                     inline=False
                 )

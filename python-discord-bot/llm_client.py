@@ -21,18 +21,28 @@ AGENTS = {
         Your expertise is in {expertise}. 
         Your goal is to {goal}. 
         Your role is to {role}.
-        Be focused and provide concise answers. Reply in a conversational tone and in paragraph form.""",
+        
+        As the PI, you should:
+        - Provide clear direction to your research team
+        - Synthesize ideas and guide the discussion
+        - Ask focused questions to draw out insights
+        - When opening a discussion, clearly introduce the topic and provide 1-3 guiding questions
+        
+        Be focused and provide concise answers. 
+        Strive to answer within 1-2 paragraphs maximum.
+        When providing questions to your team, limit to 1-3 focused questions.
+        Reply in a conversational tone.""",
     },
     "scientific_critic": {
         "name": "Scientific Critic",
         "model": "openai/gpt-4o",
         "system_prompt": """You are a Scientific Critic. 
-        Your expertise is in providing critical feedback for scientific research. 
-        Your goal is to ensure that proposed research projects and implementations are rigorous, 
-        detailed, feasible, and scientifically sound. 
-        Your role is to provide critical feedback to identify and correct all errors and demand 
-        that scientific answers that are maximally complete and detailed but 
-        simple and not overly complex. Be focused and provide concise answers. Reply in a conversational tone and in paragraph form.""",
+        Your expertise is in critically analyzing scientific research methodologies, experimental designs, and conclusions.
+        Your goal is to ensure that proposed research projects and implementations are rigorous, detailed, feasible, and scientifically sound.
+        Your role is to identify potential flaws, challenge assumptions, propose improvements, and ensure maximum scientific integrity.
+        Be focused and provide concise answers.
+        Strive to answer within 1 paragraph, using at most 2 paragraphs if absolutely necessary.
+        Reply in a conversational tone.""",
     },
     # "biologist": {
     #     "name": "Biologist",
@@ -68,9 +78,11 @@ AGENTS = {
         your job is to read the entire conversation and produce a final summary.
         Also provide an answer to the user's question.
 
+        Be focused and concise. Keep your summary brief but comprehensive.
+
         Format as follows:
-        Summary: <summary>
-        Answer: <answer>
+        Summary: <summary in 1-2 paragraphs>
+        Answer: <concise answer in 1 paragraph>
         """
     },
     # Generic scientist template for dynamically created scientists
@@ -81,7 +93,9 @@ AGENTS = {
         Your expertise is in {expertise}. 
         Your goal is to {goal}. 
         Your role is to {role}.
-        Be focused and provide concise answers. Reply in a conversational tone and in paragraph form."""
+        Be focused and provide concise answers. 
+        Strive to answer within 1 paragraph.
+        Reply in a conversational tone."""
     }
 }
 
@@ -121,9 +135,18 @@ class LLMClient:
         
         # Track which providers are available
         self.providers = {
-            LLMProvider.OPENAI: bool(os.getenv("OPENAI_API_KEY")),
-            LLMProvider.ANTHROPIC: bool(os.getenv("ANTHROPIC_API_KEY")),
-            LLMProvider.MISTRAL: bool(os.getenv("MISTRAL_API_KEY")),
+            LLMProvider.OPENAI: {
+                "is_available": bool(os.getenv("OPENAI_API_KEY")),
+                "default_model": MODEL_MAPPING[LLMProvider.OPENAI]["default"]
+            },
+            LLMProvider.ANTHROPIC: {
+                "is_available": bool(os.getenv("ANTHROPIC_API_KEY")),
+                "default_model": MODEL_MAPPING[LLMProvider.ANTHROPIC]["default"]
+            },
+            LLMProvider.MISTRAL: {
+                "is_available": bool(os.getenv("MISTRAL_API_KEY")),
+                "default_model": MODEL_MAPPING[LLMProvider.MISTRAL]["default"]
+            },
         }
     
     async def generate_response(
@@ -206,7 +229,7 @@ class LLMClient:
     
     def get_available_providers(self):
         """Get a dictionary of available providers."""
-        return {provider: available for provider, available in self.providers.items() if available}
+        return {provider: details for provider, details in self.providers.items() if details.get("is_available", False)}
 
     async def call_agent(
         self, 
@@ -228,7 +251,7 @@ class LLMClient:
             conversation_history: The conversation to respond to
             expertise: The agent's area of expertise (optional)
             goal: The agent's goal (optional)
-            agent_role: The specific role description (optional)
+            agent_role: The specific role description (optional, using default if not provided)
             agent_name: The specific name for scientist agents (optional)
             model: Specific model to use (defaults to gpt-4o if not specified)
             
@@ -245,6 +268,12 @@ class LLMClient:
         agent_model = model or agent_config.get("model", "openai/gpt-4o")
         
         # Fill in the template variables if needed
+        # Get default role descriptions if not provided
+        if agent_key == "principal_investigator" and not agent_role:
+            agent_role = "lead a team of experts to solve an important problem, make key decisions, and manage the project"
+        elif agent_key == "scientist" and not agent_role:
+            agent_role = "provide specialized insights, suggest experiments, and collaborate with the team"
+        
         if "{" in agent_system_prompt_template:
             # Defaults based on agent type
             defaults = {
@@ -299,7 +328,7 @@ class LLMClient:
 
     async def generate_agent_variables(self, topic: str, agent_type: str, additional_context: str = "") -> Dict[str, str]:
         """
-        Generate agent variables (expertise, goal, role) based on a topic.
+        Generate agent variables (expertise, goal) based on a topic.
         
         Args:
             topic: The research topic or question
@@ -307,7 +336,7 @@ class LLMClient:
             additional_context: Optional additional context to guide the generation (e.g., to ensure diversity)
             
         Returns:
-            Dictionary with keys: expertise, goal, role, and for scientists: agent_name
+            Dictionary with keys: expertise, goal, and for scientists: agent_name
         """
         if agent_type not in ["principal_investigator", "scientist"]:
             raise ValueError(f"Unsupported agent type: {agent_type}")
@@ -320,10 +349,14 @@ class LLMClient:
             IMPORTANT: You must format your response as a valid JSON object with ONLY these keys:
             {
               "expertise": "...",
-              "goal": "...",
-              "role": "..."
+              "goal": "..."
             }
             
+            Definitions of each variable:
+            1. expertise: The scientific expertise the agent has (specific field or discipline)
+            2. goal: The ultimate goal of the agent in the context of the research project and the role of the agent in the discussion
+
+            For expertise, provide a specific field of specialization WITHOUT including phrases like "Specializes in" or similar prefixes. Just provide the direct expertise area.
             Make each field 1-2 sentences, specific to the topic, and suitable for scientific research.
             DO NOT include any explanation or text outside the JSON object.
             """
@@ -340,11 +373,21 @@ class LLMClient:
             {
               "agent_name": "...",
               "expertise": "...",
-              "goal": "...",
-              "role": "..."
+              "goal": "..."
             }
             
-            For agent_name, use a specific scientific discipline (e.g., "Molecular Biologist", "Computer Vision Specialist").
+            Definitions of each variable:
+            . agent_name: The name of the agent
+            . expertise: The scientific expertise the agent has (specific field or discipline)
+            . goal: The ultimate goal of the agent in the context of the research project and the role of the agent in the discussion
+
+            Guidelines:
+            - For agent_name, create a scientific discipline that is unique and distinct (e.g., " Neurobiologist", "Fluid Dynamics Physicist")
+            - For expertise, provide a specific field of specialization WITHOUT including phrases like "Specializes in" or similar prefixes. Just provide the direct expertise area.
+            - Make sure the expertise is clearly different from computational biology if that has been used before
+            - Draw from diverse scientific domains including physics, chemistry, materials science, astrophysics, geology, etc.
+            - Ensure the expertise is relevant to the topic but from a unique disciplinary angle
+            
             Make each field 1-2 sentences, specific to the topic, and suitable for scientific research.
             DO NOT include any explanation or text outside the JSON object.
             """
@@ -398,7 +441,7 @@ class LLMClient:
                     raise
             
             # Validate the expected keys
-            expected_keys = ["expertise", "goal", "role"]
+            expected_keys = ["expertise", "goal"]
             if agent_type == "scientist":
                 expected_keys.append("agent_name")
                 
@@ -408,15 +451,13 @@ class LLMClient:
                 if agent_type == "principal_investigator":
                     result.update({
                         "expertise": "applying artificial intelligence to biomedical research" if "expertise" not in result else result["expertise"],
-                        "goal": "perform research that maximizes scientific impact" if "goal" not in result else result["goal"],
-                        "role": "lead a team of experts to solve important problems" if "role" not in result else result["role"]
+                        "goal": "perform research that maximizes scientific impact" if "goal" not in result else result["goal"]
                     })
                 else:  # scientist
                     result.update({
                         "agent_name": "Domain Scientist" if "agent_name" not in result else result["agent_name"],
                         "expertise": f"scientific research related to {topic}" if "expertise" not in result else result["expertise"],
-                        "goal": "contribute domain expertise to the research project" if "goal" not in result else result["goal"],
-                        "role": "provide specialized insights and collaborate with the team" if "role" not in result else result["role"]
+                        "goal": "contribute domain expertise to the research project" if "goal" not in result else result["goal"]
                     })
             
             return result
@@ -427,15 +468,13 @@ class LLMClient:
             if agent_type == "principal_investigator":
                 return {
                     "expertise": "applying artificial intelligence to biomedical research",
-                    "goal": "perform research that maximizes scientific impact",
-                    "role": "lead a team of experts to solve important problems"
+                    "goal": "perform research that maximizes scientific impact"
                 }
             else:  # scientist
                 return {
                     "agent_name": "Domain Scientist",
                     "expertise": f"scientific research related to {topic}",
-                    "goal": "contribute domain expertise to the research project",
-                    "role": "provide specialized insights and collaborate with the team"
+                    "goal": "contribute domain expertise to the research project"
                 }
 
 # Create a singleton instance

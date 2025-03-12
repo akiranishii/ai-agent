@@ -1,0 +1,134 @@
+2025-03-07 15:18:38,326 - config - INFO - Loading environment variables
+2025-03-07 15:18:38,327 - config - INFO - Loading environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/.env
+2025-03-07 15:18:38,327 - config - INFO - Loading environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/local_env.yml
+2025-03-07 15:18:38,328 - config - INFO - Set log level to INFO
+2025-03-07 15:18:38,328 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-03-07 15:18:38,329 - __main__ - INFO - Starting extension loading process
+2025-03-07 15:18:38,329 - __main__ - INFO - Beginning extension loading sequence
+2025-03-07 15:18:38,329 - __main__ - INFO - Attempting to load extension: commands.lab_session_commands
+2025-03-07 15:18:38,330 - db_client - INFO - DatabaseClient initialized with base URL: http://localhost:3000/api
+2025-03-07 15:18:38,331 - commands.lab_session_commands - INFO - Created new lab command group
+2025-03-07 15:18:38,331 - commands.lab_session_commands - INFO - Registered lab session commands
+2025-03-07 15:18:38,331 - __main__ - INFO - Successfully loaded extension: commands.lab_session_commands
+2025-03-07 15:18:38,331 - __main__ - INFO - Attempting to load extension: commands.lab_agent_commands
+2025-03-07 15:18:38,332 - commands.lab_agent_commands - INFO - Using existing lab command group
+2025-03-07 15:18:38,332 - commands.lab_agent_commands - INFO - Registered lab agent commands
+2025-03-07 15:18:38,332 - __main__ - INFO - Successfully loaded extension: commands.lab_agent_commands
+2025-03-07 15:18:38,332 - __main__ - INFO - Attempting to load extension: commands.lab_meeting_commands
+2025-03-07 15:18:38,821 - httpx - INFO - HTTP Request: GET https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json "HTTP/1.1 200 OK"
+2025-03-07 15:18:39,134 - llm_client - INFO - Loaded environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/.env
+2025-03-07 15:18:39,134 - llm_client - INFO - OpenAI API Key available: True
+2025-03-07 15:18:39,134 - llm_client - INFO - Anthropic API Key available: True
+2025-03-07 15:18:39,134 - llm_client - INFO - Mistral API Key available: True
+2025-03-07 15:18:39,135 - orchestrator - INFO - Initialized AgentOrchestrator
+2025-03-07 15:18:39,135 - commands.lab_meeting_commands - INFO - Using existing lab command group
+2025-03-07 15:18:39,135 - commands.lab_meeting_commands - INFO - Registered lab meeting commands
+2025-03-07 15:18:39,136 - __main__ - INFO - Successfully loaded extension: commands.lab_meeting_commands
+2025-03-07 15:18:39,136 - __main__ - INFO - Attempting to load extension: commands.lab_transcript_commands
+2025-03-07 15:18:39,136 - commands.lab_transcript_commands - INFO - Using existing lab command group
+2025-03-07 15:18:39,136 - commands.lab_transcript_commands - INFO - Registered lab transcript commands
+2025-03-07 15:18:39,136 - __main__ - INFO - Successfully loaded extension: commands.lab_transcript_commands
+2025-03-07 15:18:39,136 - __main__ - INFO - Attempting to load extension: commands.quickstart_command
+2025-03-07 15:18:39,137 - orchestrator - INFO - Initialized AgentOrchestrator
+2025-03-07 15:18:39,137 - commands.quickstart_command - INFO - Initialized quickstart command
+2025-03-07 15:18:39,137 - __main__ - INFO - Successfully loaded extension: commands.quickstart_command
+2025-03-07 15:18:39,137 - __main__ - INFO - Attempting to load extension: commands.help_command
+2025-03-07 15:18:39,138 - commands.help_command - INFO - Initialized help command
+2025-03-07 15:18:39,138 - __main__ - INFO - Successfully loaded extension: commands.help_command
+2025-03-07 15:18:39,138 - __main__ - INFO - Completed extension loading. Loaded 6 of 6 extensions
+2025-03-07 15:18:39,138 - __main__ - INFO - Extension loading completed successfully
+2025-03-07 15:18:39,138 - __main__ - INFO - Waiting for commands to be fully registered...
+2025-03-07 15:18:40,139 - __main__ - INFO - Starting command sync process
+2025-03-07 15:18:40,139 - __main__ - INFO - Starting bot...
+2025-03-07 15:18:40,140 - discord.client - INFO - logging in using static token
+2025-03-07 15:18:41,111 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 3d763ef004776f2ed51948b7c695f944).
+2025-03-07 15:18:43,130 - __main__ - INFO - Co-Scientist is connected to Discord!
+2025-03-07 15:18:43,130 - __main__ - INFO - Bot ID: 1344103520856707235
+2025-03-07 15:18:43,130 - __main__ - INFO - Connected to 1 guilds
+2025-03-07 15:18:43,131 - llm_client - INFO - Loaded environment variables from /Users/akiranishii/Desktop/projects/ai-agent/python-discord-bot/.env
+2025-03-07 15:18:43,131 - llm_client - INFO - OpenAI API Key available: True
+2025-03-07 15:18:43,131 - llm_client - INFO - Anthropic API Key available: True
+2025-03-07 15:18:43,131 - llm_client - INFO - Mistral API Key available: True
+2025-03-07 15:18:43,131 - __main__ - ERROR - Error loading LLM providers: 'bool' object has no attribute 'get'
+2025-03-07 15:18:43,134 - __main__ - INFO - No guild ID specified. Commands will be registered globally.
+2025-03-07 15:18:43,134 - __main__ - INFO - Syncing commands with Discord...
+2025-03-07 15:18:43,389 - __main__ - INFO - Slash commands synced globally
+2025-03-07 15:18:43,390 - __main__ - INFO - Bot is ready!
+2025-03-07 15:23:48,251 - commands.quickstart_command - INFO - Starting quickstart for user 1050933498640343082 on topic: What is cancer?
+2025-03-07 15:23:48,253 - db_client - INFO - Performing health check to: http://localhost:3000/api/health
+2025-03-07 15:23:49,077 - commands.quickstart_command - INFO - Found active session 89e26551-089e-40a3-b71c-987731c0a961 for user 1050933498640343082
+2025-03-07 15:23:49,693 - commands.quickstart_command - INFO - Ended previous active session 89e26551-089e-40a3-b71c-987731c0a961 for user 1050933498640343082
+2025-03-07 15:23:49,693 - commands.quickstart_command - INFO - Creating new session for user 1050933498640343082
+2025-03-07 15:23:50,100 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:23:53,097 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:23:53,122 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:23:53,678 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:23:55,758 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:23:55,760 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:23:55,797 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:23:57,910 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:23:57,913 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:23:57,947 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:01,483 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:01,489 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:02,766 - orchestrator - INFO - Initializing meeting 8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614
+2025-03-07 15:24:02,766 - orchestrator - INFO - Initialized meeting 8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614 (parallel index 0) for session fc867584-2bda-4b58-bcad-5b8762828b12
+2025-03-07 15:24:03,211 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:05,263 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:05,269 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:05,270 - orchestrator - INFO - Mapping agent 'Cancer Biologist' with role 'Scientist' to agent_key 'scientist'
+2025-03-07 15:24:05,272 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:10,845 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:10,848 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:10,849 - orchestrator - INFO - Creating transcript: meeting=8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614, agent=Cancer Biologist, role=Scientist, round=1
+2025-03-07 15:24:11,393 - db_client - ERROR - API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:11,393 - orchestrator - ERROR - API error creating transcript: API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:11,678 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:13,646 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:13,648 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:13,649 - orchestrator - INFO - Mapping agent 'Oncologist' with role 'Scientist' to agent_key 'scientist'
+2025-03-07 15:24:13,651 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:21,001 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:21,006 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:21,007 - orchestrator - INFO - Creating transcript: meeting=8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614, agent=Oncologist, role=Scientist, round=1
+2025-03-07 15:24:21,073 - db_client - ERROR - API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:21,073 - orchestrator - ERROR - API error creating transcript: API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:21,529 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:25,262 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:25,271 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:25,272 - orchestrator - INFO - Creating transcript: meeting=8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614, agent=Principal Investigator (synthesis), role=Lead, round=1
+2025-03-07 15:24:25,333 - db_client - ERROR - API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:25,334 - orchestrator - ERROR - API error creating transcript: API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:26,070 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:27,810 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:27,814 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:27,814 - orchestrator - INFO - Mapping agent 'Cancer Biologist' with role 'Scientist' to agent_key 'scientist'
+2025-03-07 15:24:27,816 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:37,445 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:37,452 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:37,452 - orchestrator - INFO - Creating transcript: meeting=8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614, agent=Cancer Biologist, role=Scientist, round=2
+2025-03-07 15:24:37,493 - db_client - ERROR - API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:37,493 - orchestrator - ERROR - API error creating transcript: API error (500): {"isSuccess":false,"message":"Failed to add transcript message","data":null}
+2025-03-07 15:24:37,703 - orchestrator - ERROR - Error in conversation round 2, call 0: 400 Bad Request (error code: 50035): Invalid Form Body
+In content: Must be 2000 or fewer in length.
+2025-03-07 15:24:37,705 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:38,959 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:38,964 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:38,965 - orchestrator - INFO - Mapping agent 'Oncologist' with role 'Scientist' to agent_key 'scientist'
+2025-03-07 15:24:38,967 - LiteLLM - INFO - 
+LiteLLM completion() model= gpt-4o; provider = openai
+2025-03-07 15:24:49,006 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-07 15:24:49,009 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
+2025-03-07 15:24:49,009 - orchestrator - INFO - Creating transcript: meeting=8d5ffd2c-5520-4e11-9c3d-7f8fe1c23614, agent=Oncologist, role=Scientist, round=2

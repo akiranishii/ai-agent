@@ -79,17 +79,6 @@ class LabAgentCommands(commands.Cog):
         """Callback for the list_agents command."""
         await self.list_agents(interaction)
 
-    @app_commands.command(
-        name="agent_create",
-        description="Create a new AI agent in the current lab session"
-    )
-    @app_commands.describe(
-        agent_name="Name of the agent (e.g., 'Principal Investigator', 'Biologist')",
-        expertise="Agent's area of expertise (e.g., 'Structural biology')",
-        goal="Agent's main objective (e.g., 'Propose novel protein scaffolds')",
-        role="Agent's functional role (e.g., 'Provide domain insights')",
-        model="LLM model to use (e.g., 'openai', 'anthropic', 'mistral')"
-    )
     async def create_agent(
         self,
         interaction: discord.Interaction,
@@ -144,14 +133,30 @@ class LabAgentCommands(commands.Cog):
                 description=f"Agent '{agent_name}' has been created.",
                 color=discord.Color.green()
             )
-            embed.add_field(name="Name", value=agent_name, inline=True)
+            
+            # Add agent details
+            field_value = []
             if expertise:
-                embed.add_field(name="Expertise", value=expertise, inline=True)
+                field_value.append(f"Expertise: {expertise}")
             if goal:
-                embed.add_field(name="Goal", value=goal, inline=True)
+                field_value.append(f"Goal: {goal}")
             if role:
-                embed.add_field(name="Role", value=role, inline=True)
-            embed.add_field(name="Model", value=model, inline=True)
+                field_value.append(f"Role: {role}")
+            if model:
+                field_value.append(f"Model: {model}")
+                
+            if field_value:
+                embed.add_field(
+                    name="Details",
+                    value="\n".join(field_value),
+                    inline=False
+                )
+            
+            embed.add_field(
+                name="ID",
+                value=agent_data.get("id", "Unknown"),
+                inline=False
+            )
             
             await interaction.followup.send(embed=embed, ephemeral=True)
             
@@ -162,17 +167,6 @@ class LabAgentCommands(commands.Cog):
                 ephemeral=True
             )
 
-    @app_commands.command(
-        name="agent_update",
-        description="Update an existing agent in the current lab session"
-    )
-    @app_commands.describe(
-        agent_name="Name of the agent to update",
-        expertise="New expertise (optional)",
-        goal="New goal (optional)",
-        role="New role (optional)",
-        model="New LLM model (optional)"
-    )
     async def update_agent(
         self,
         interaction: discord.Interaction,
@@ -206,7 +200,7 @@ class LabAgentCommands(commands.Cog):
             if expertise is not None:
                 updates["expertise"] = expertise
             if goal is not None:
-                updates["description"] = goal
+                updates["description"] = goal  # Map goal to description for the database
             if role is not None:
                 updates["role"] = role
             if model is not None:
@@ -277,13 +271,6 @@ class LabAgentCommands(commands.Cog):
                 ephemeral=True
             )
 
-    @app_commands.command(
-        name="agent_delete",
-        description="Delete an agent from the current lab session"
-    )
-    @app_commands.describe(
-        agent_name="Name of the agent to delete"
-    )
     async def delete_agent(
         self,
         interaction: discord.Interaction,
@@ -357,10 +344,6 @@ class LabAgentCommands(commands.Cog):
                 ephemeral=True
             )
 
-    @app_commands.command(
-        name="agent_list",
-        description="List all agents in the current lab session"
-    )
     async def list_agents(
         self,
         interaction: discord.Interaction

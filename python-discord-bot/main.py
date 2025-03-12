@@ -22,10 +22,7 @@ intents.members = True  # Need members for user lookups
 bot = commands.Bot(
     command_prefix=COMMAND_PREFIX,
     intents=intents,
-    application_id=APPLICATION_ID,
-    help_command=commands.DefaultHelpCommand(
-        no_category="Commands"
-    )
+    application_id=APPLICATION_ID
 )
 
 # Extension/cog settings
